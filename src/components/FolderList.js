@@ -1,25 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 
-function FolderList({ onFolderSelect }) {
-  const [folders, setFolders] = useState([]);
+function FolderList({ folders, onFolderSelect, selectedFolder }) {
   const [newFolderName, setNewFolderName] = useState('');
 
-  useEffect(() => {
-    fetchFolders();
-  }, []);
-
-  const fetchFolders = async () => {
-    try {
-      const response = await fetch('http://localhost:5000/api/folders');
-      const data = await response.json();
-      setFolders(data);
-    } catch (error) {
-      console.error('Error fetching folders:', error);
-    }
-  };
-
-  const createFolder = async (e) => {
-    e.preventDefault();
+  const createFolder = async () => {
     if (!newFolderName.trim()) return;
 
     try {
@@ -33,10 +17,8 @@ function FolderList({ onFolderSelect }) {
 
       if (response.ok) {
         setNewFolderName('');
-        fetchFolders();
-      } else {
-        const errorData = await response.json();
-        console.error('Error creating folder:', errorData);
+        // Refresh folders list
+        window.location.reload();
       }
     } catch (error) {
       console.error('Error creating folder:', error);
@@ -44,29 +26,28 @@ function FolderList({ onFolderSelect }) {
   };
 
   return (
-    <div>
+    <div className="folder-list">
       <h2>Folders</h2>
-      <form onSubmit={createFolder} className="upload-form">
+      <div className="form-group">
         <input
           type="text"
-          className="input-field"
           value={newFolderName}
           onChange={(e) => setNewFolderName(e.target.value)}
-          placeholder="New Folder Name"
+          placeholder="New folder name"
         />
-        <button type="submit" className="button">Create Folder</button>
-      </form>
-      <ul className="folder-list">
-        {folders.map((folder) => (
-          <li
-            key={folder.id}
-            className="folder-item"
-            onClick={() => onFolderSelect(folder)}
-          >
-            {folder.name}
-          </li>
-        ))}
-      </ul>
+        <button className="button button-primary" onClick={createFolder}>
+          Create Folder
+        </button>
+      </div>
+      {folders.map((folder) => (
+        <div
+          key={folder.id}
+          className={`folder-item ${selectedFolder?.id === folder.id ? 'selected' : ''}`}
+          onClick={() => onFolderSelect(folder)}
+        >
+          {folder.name}
+        </div>
+      ))}
     </div>
   );
 }

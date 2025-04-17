@@ -1,29 +1,20 @@
 import React, { useState } from 'react';
 
-function UploadForm({ selectedFolder }) {
+function UploadForm({ folderId, onUploadComplete }) {
   const [file, setFile] = useState(null);
-  const [error, setError] = useState(null);
-  const [uploading, setUploading] = useState(false);
-
-  const handleFileChange = (e) => {
-    const selectedFile = e.target.files[0];
-    if (selectedFile) {
-      // Store the original file without any encoding manipulation
-      setFile(selectedFile);
-      setError(null);
-    }
-  };
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!file || !selectedFolder) return;
-
-    setUploading(true);
-    setError(null);
+    if (!file) {
+      setError('Please select a file');
+      return;
+    }
 
     const formData = new FormData();
     formData.append('file', file);
-    formData.append('folderId', selectedFolder.id);
+    formData.append('folderId', folderId);
 
     try {
       const response = await fetch('http://localhost:5000/api/documents', {
@@ -32,49 +23,45 @@ function UploadForm({ selectedFolder }) {
       });
 
       if (response.ok) {
-        const result = await response.json();
-        console.log('File uploaded successfully:', result);
+        setSuccess('File uploaded successfully');
         setFile(null);
-        // Trigger document list refresh in parent component
-        window.location.reload();
+        setError('');
+        onUploadComplete();
+        // Reset file input
+        const fileInput = document.querySelector('input[type="file"]');
+        if (fileInput) fileInput.value = '';
       } else {
-        const errorData = await response.json();
-        setError(errorData.error || 'Failed to upload file');
-        console.error('Upload failed:', errorData);
+        const data = await response.json();
+        setError(data.error || 'Upload failed');
+        setSuccess('');
       }
     } catch (error) {
-      setError('Error uploading document: ' + error.message);
-      console.error('Error uploading document:', error);
-    } finally {
-      setUploading(false);
+      setError('Error uploading file');
+      setSuccess('');
+      console.error('Error:', error);
     }
   };
 
-  if (!selectedFolder) {
-    return null;
-  }
-
   return (
-    <div>
-      <form onSubmit={handleSubmit} className="upload-form">
-        <h3>Upload Document to {selectedFolder.name}</h3>
-        <input
-          type="file"
-          onChange={handleFileChange}
-          className="input-field"
-          accept=".pdf,.doc,.docx,.hwp,.jpg,.jpeg,.png"
-          disabled={uploading}
-        />
-        {file && (
-          <div className="file-info">
-            <strong>Selected file:</strong> {file.name}
-          </div>
-        )}
-        <button type="submit" className="button" disabled={!file || uploading}>
-          {uploading ? 'Uploading...' : 'Upload Document'}
+    <div className="upload-form">
+      <h3>Upload Document</h3>
+      <form onSubmit={handleSubmit}>
+        <div className="form-group">
+          <input
+            type="file"
+            onChange={(e) => {
+              setFile(e.target.files[0]);
+              setError('');
+              setSuccess('');
+            }}
+          />
+        </div>
+        <button type="submit" className="button button-primary">
+          Upload
         </button>
+        {error && <div className="error-message">{error}</div>}
+        {success && <div className="success-message">{success}</div>}
       </form>
-      {error && <div className="error-message">{error}</div>}
     </div>
   );
 }
