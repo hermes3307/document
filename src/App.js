@@ -13,6 +13,13 @@ function App() {
     fetchFolders();
   }, []);
 
+  useEffect(() => {
+    // Automatically select the first folder if available and none is selected
+    if (folders.length > 0 && !selectedFolder) {
+      setSelectedFolder(folders[0]);
+    }
+  }, [folders, selectedFolder]);
+
   const fetchFolders = async () => {
     const response = await fetch('http://localhost:5000/api/folders');
     const data = await response.json();

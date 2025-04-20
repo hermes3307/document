@@ -179,6 +179,38 @@ app.get('/api/documents/:id/download', (req, res) => {
   });
 });
 
+// Get file content for preview (text and PDF)
+app.get('/api/documents/:id/content', (req, res) => {
+  const { id } = req.params;
+  db.get('SELECT filename, content, file_type FROM documents WHERE id = ?', [id], (err, row) => {
+    if (err) {
+      res.status(500).json({ error: err.message });
+      return;
+    }
+    if (!row) {
+      res.status(404).json({ error: 'Document not found' });
+      return;
+    }
+    try {
+      const textTypes = ['.txt', '.md', '.js', '.json', '.html', '.css', '.py', '.java', '.c', '.cpp', '.csv', '.log'];
+      if (textTypes.includes(row.file_type)) {
+        const content = Buffer.from(row.content).toString('utf8');
+        res.type('text/plain').send(content);
+        return;
+      }
+      if (row.file_type === '.pdf') {
+        res.type('application/pdf').send(Buffer.from(row.content));
+        return;
+      }
+      // For other types (e.g., docx), indicate not supported for preview
+      res.status(415).send('Preview not supported for this file type.');
+    } catch (error) {
+      console.error('Error previewing file:', error);
+      res.status(500).json({ error: 'Error previewing file' });
+    }
+  });
+});
+
 // Delete document
 app.delete('/api/documents/:id', (req, res) => {
   const { id } = req.params;

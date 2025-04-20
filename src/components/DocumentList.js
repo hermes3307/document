@@ -1,6 +1,12 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 
 function DocumentList({ folderId, documents, setDocuments }) {
+  const [showModal, setShowModal] = useState(false);
+  const [modalContent, setModalContent] = useState('');
+  const [modalTitle, setModalTitle] = useState('');
+  const [modalFileType, setModalFileType] = useState('');
+  const [loadingContent, setLoadingContent] = useState(false);
+
   useEffect(() => {
     fetchDocuments();
   }, [folderId]);
@@ -70,13 +76,38 @@ function DocumentList({ folderId, documents, setDocuments }) {
     }
   };
 
+  // Fetch file content and show modal
+  const handleShowFile = async (doc) => {
+    setShowModal(true);
+    setModalTitle(doc.filename);
+    setLoadingContent(true);
+    setModalFileType(doc.file_type);
+    try {
+      const response = await fetch(`http://localhost:5000/api/documents/${doc.id}/content`);
+      if (response.ok) {
+        if (doc.file_type === '.pdf') {
+          const blob = await response.blob();
+          setModalContent(URL.createObjectURL(blob));
+        } else {
+          const data = await response.text();
+          setModalContent(data);
+        }
+      } else {
+        setModalContent('Preview not supported for this file type.');
+      }
+    } catch (err) {
+      setModalContent('Error loading file content.');
+    }
+    setLoadingContent(false);
+  };
+
   return (
     <div className="document-list">
       <h2>Documents</h2>
       {documents.map((doc) => (
-        <div key={doc.id} className="document-item">
+        <div key={doc.id} className="document-item file-hover" onClick={() => handleShowFile(doc)}>
           <span>{doc.filename}</span>
-          <div className="document-actions">
+          <div className="document-actions" onClick={e => e.stopPropagation()}>
             <button
               className="button button-secondary"
               onClick={() => downloadDocument(doc.id, doc.filename)}
@@ -98,6 +129,25 @@ function DocumentList({ folderId, documents, setDocuments }) {
           </div>
         </div>
       ))}
+      {showModal && (
+        <div className="modal-overlay" onClick={() => setShowModal(false)}>
+          <div className="modal-content" onClick={e => e.stopPropagation()}>
+            <h3>{modalTitle}</h3>
+            <div className="modal-body" style={{ whiteSpace: 'pre-wrap', textAlign: 'left', maxHeight: 400, overflowY: 'auto' }}>
+              {loadingContent ? 'Loading...' : (
+                modalFileType === '.pdf' ? (
+                  <iframe src={modalContent} title="PDF Preview" width="100%" height="400px" style={{ border: 'none' }} />
+                ) : modalFileType === '.docx' ? (
+                  <span>Preview not supported for DOCX files. Please download to view.</span>
+                ) : (
+                  modalContent
+                )
+              )}
+            </div>
+            <button className="button button-primary" onClick={() => setShowModal(false)} style={{ marginTop: 16 }}>Close</button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
