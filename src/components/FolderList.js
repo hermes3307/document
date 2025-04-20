@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-function FolderList({ folders, onFolderSelect, selectedFolder }) {
+function FolderList({ folders, onFolderSelect, selectedFolder, onUploadFolder }) {
   const [newFolderName, setNewFolderName] = useState('');
 
   const createFolder = async () => {
@@ -37,6 +37,11 @@ function FolderList({ folders, onFolderSelect, selectedFolder }) {
         />
         <button className="button button-primary" onClick={createFolder}>
           Create Folder
+        </button>
+      </div>
+      <div style={{ margin: '8px 0' }}>
+        <button className="button button-primary" style={{ width: '100%' }} onClick={onUploadFolder}>
+          Upload Folder
         </button>
       </div>
       {folders.map((folder) => (

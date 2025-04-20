@@ -3,6 +3,8 @@ const sqlite3 = require('sqlite3').verbose();
 const multer = require('multer');
 const cors = require('cors');
 const path = require('path');
+const fs = require('fs');
+const os = require('os');
 
 const app = express();
 const port = process.env.PORT || 5000;
@@ -125,8 +127,8 @@ app.post('/api/documents', upload.single('file'), (req, res) => {
   }
 
   try {
-    // Handle Korean filename properly using Buffer
-    const originalFilename = Buffer.from(file.originalname, 'latin1').toString('utf8');
+    // Use originalname as-is (UTF-8, do not convert)
+    const originalFilename = file.originalname;
     const fileType = path.extname(originalFilename).toLowerCase();
     
     db.run(
@@ -252,6 +254,41 @@ app.put('/api/documents/:id/rename', (req, res) => {
       res.json({ message: 'Document renamed successfully' });
     }
   );
+});
+
+// List Windows drives (C:, D:, etc.)
+app.get('/api/filesystem/root', (req, res) => {
+  // On Windows, drives are typically A: to Z:
+  const drives = [];
+  for (let i = 67; i <= 90; i++) { // C to Z
+    const drive = String.fromCharCode(i) + ':\\';
+    if (fs.existsSync(drive)) {
+      drives.push({
+        name: drive.replace('\\', ''),
+        path: drive,
+        type: 'directory',
+        children: []
+      });
+    }
+  }
+  res.json(drives);
+});
+
+// List folders/files for a given path
+app.get('/api/filesystem/list', (req, res) => {
+  const dirPath = req.query.path;
+  if (!dirPath) return res.status(400).json({ error: 'No path provided' });
+  try {
+    const entries = fs.readdirSync(dirPath, { withFileTypes: true });
+    const result = entries.map(entry => ({
+      name: entry.name,
+      path: path.join(dirPath, entry.name),
+      type: entry.isDirectory() ? 'directory' : 'file'
+    }));
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // Start server

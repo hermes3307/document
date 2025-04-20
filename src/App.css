@@ -90,12 +90,13 @@
 }
 
 .button-danger {
-  background: #f44336;
+  background: #2196f3;
   color: white;
 }
 
 .button-danger:hover {
-  background: #d32f2f;
+  background: #1976d2;
+  color: white;
 }
 
 .upload-form {
@@ -151,20 +152,43 @@
 .modal-overlay {
   position: fixed;
   top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(0,0,0,0.4);
+  background: rgba(0,0,0,0.3);
+  z-index: 2000;
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 1000;
 }
 
 .modal-content {
   background: #fff;
-  border-radius: 8px;
   padding: 24px;
+  border-radius: 8px;
+  box-shadow: 0 2px 16px rgba(0,0,0,0.15);
+  min-width: 340px;
+  min-height: 200px;
   max-width: 600px;
-  width: 90%;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  width: 90vw;
+  max-height: 90vh;
+  overflow: auto;
+  position: relative;
+}
+
+.modal-content.maximized {
+  width: 90vw !important;
+  height: 80vh !important;
+  max-width: 1200px;
+  max-height: 90vh;
+  min-width: 400px;
+  min-height: 400px;
+  position: fixed;
+  top: 5vh;
+  left: 5vw;
+  z-index: 3000;
+  background: #fff;
+  box-shadow: 0 4px 32px rgba(0,0,0,0.2);
+  padding: 24px;
+  border-radius: 12px;
+  overflow: auto;
 }
 
 .modal-body {

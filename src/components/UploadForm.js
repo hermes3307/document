@@ -45,8 +45,8 @@ function UploadForm({ folderId, onUploadComplete }) {
   return (
     <div className="upload-form">
       <h3>Upload Document</h3>
-      <form onSubmit={handleSubmit}>
-        <div className="form-group">
+      <form onSubmit={handleSubmit} style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+        <div className="form-group" style={{ margin: 0 }}>
           <input
             type="file"
             onChange={(e) => {

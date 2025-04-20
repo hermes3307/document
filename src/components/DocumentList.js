@@ -6,6 +6,7 @@ function DocumentList({ folderId, documents, setDocuments }) {
   const [modalTitle, setModalTitle] = useState('');
   const [modalFileType, setModalFileType] = useState('');
   const [loadingContent, setLoadingContent] = useState(false);
+  const [isMaximized, setIsMaximized] = useState(false);
 
   useEffect(() => {
     fetchDocuments();
@@ -130,21 +131,44 @@ function DocumentList({ folderId, documents, setDocuments }) {
         </div>
       ))}
       {showModal && (
-        <div className="modal-overlay" onClick={() => setShowModal(false)}>
-          <div className="modal-content" onClick={e => e.stopPropagation()}>
-            <h3>{modalTitle}</h3>
-            <div className="modal-body" style={{ whiteSpace: 'pre-wrap', textAlign: 'left', maxHeight: 400, overflowY: 'auto' }}>
-              {loadingContent ? 'Loading...' : (
+        <div className="modal-overlay">
+          <div className={`modal-content${isMaximized ? ' maximized' : ''}`}
+            style={{
+              width: isMaximized ? '95vw' : undefined,
+              height: isMaximized ? '90vh' : undefined,
+              maxWidth: isMaximized ? '1400px' : undefined,
+              maxHeight: isMaximized ? '95vh' : undefined,
+              minWidth: isMaximized ? '600px' : undefined,
+              minHeight: isMaximized ? '400px' : undefined
+            }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <h3 style={{ margin: 0 }}>{modalTitle}</h3>
+              <div>
+                <button className="button button-secondary" style={{ marginRight: 8 }} onClick={() => setIsMaximized(m => !m)}>
+                  {isMaximized ? 'Restore' : 'Maximize'}
+                </button>
+                <button className="button button-primary" onClick={() => setShowModal(false)}>
+                  Close
+                </button>
+              </div>
+            </div>
+            <div style={{ margin: '16px 0', overflow: 'auto', height: isMaximized ? '75vh' : '400px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+              {loadingContent ? (
+                <span>Loading...</span>
+              ) : (
                 modalFileType === '.pdf' ? (
-                  <iframe src={modalContent} title="PDF Preview" width="100%" height="400px" style={{ border: 'none' }} />
+                  <iframe src={modalContent} title="PDF Preview"
+                    style={{ border: 'none', width: isMaximized ? '95vw' : '100%', height: isMaximized ? '75vh' : '400px', maxWidth: '100%', maxHeight: '100%' }}
+                    allowFullScreen
+                  />
                 ) : modalFileType === '.docx' ? (
                   <span>Preview not supported for DOCX files. Please download to view.</span>
                 ) : (
-                  modalContent
+                  <div style={{ width: '100%' }}>{modalContent}</div>
                 )
               )}
             </div>
-            <button className="button button-primary" onClick={() => setShowModal(false)} style={{ marginTop: 16 }}>Close</button>
           </div>
         </div>
       )}
